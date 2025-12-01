@@ -33,6 +33,7 @@ bool firstMouse = true;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
+glm::vec3 lightPos(1.2f, 1.0f, 2.0f);
 // ----------------------------
 // Function Declarations
 // ----------------------------
@@ -74,77 +75,85 @@ int main()
     // ---------------------------
     // Shader
     // ---------------------------
-    Shader shader = shader_from_files("shaders/default.vert",
-                                      "shaders/default.frag");
+    Shader lightingShader = shader_from_files("shaders/colors.vert", "shaders/colors.frag");
+    Shader lightCubeShader = shader_from_files("shaders/light_cube.vert", "shaders/light_cube.frag");
+    //Shader shader = shader_from_files("shaders/default.vert", "shaders/default.frag");
 
     // ---------------------------
     // Geometry
     // ---------------------------
     float vertices[] = 
-    { 
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 
-        0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 
-        -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 
-        -0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 
-        
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 
-        0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 
-        0.5f, 0.5f, 0.5f, 1.0f, 1.0f, 
-        -0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 
-        
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 
-        -0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 
-        -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 
-        -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 
-        -0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 
-        
-        0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 
-        0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 
-        0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-         0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 
-         0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 
-         
-         -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-          0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 
-          0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 
-          0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 
-          -0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 
-          -0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 
-          
-          -0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 
-          0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 
-          0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 
-          0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 
-          -0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 
-          -0.5f, 0.5f, -0.5f, 0.0f, 1.0f 
+    {
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
     };
 
-    VertexArray vao;
-    vao.init();
-    vao.bind();
-
     VertexBuffer vbo;
+    
+    
+    
+
+    VertexArray vaoLight, vaoCube;
+    vaoCube.init();
 
     vbo.init(vertices, sizeof(vertices));
-    vao.enableAttrib(0, 3, GL_FLOAT, false, 5 * sizeof(float), (void*)0);
-    vao.enableAttrib(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    vbo.unbind();
-    vao.unbind();
+    vaoCube.bind();
+    vaoCube.enableAttrib(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+    vaoCube.enableAttrib(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    vaoLight.init();
+    vaoLight.bind();
+    vbo.bind();
+    vaoLight.enableAttrib(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+
 
 
     // ---------------------------
     // Textures
     // ---------------------------
-    Texture tex1 = texture_load("src/wall.jpg", GL_TEXTURE0);
-    Texture tex2 = texture_load("src/awesomeface.png", 1);
-    shader_use(&shader);
-    shader_set_int(&shader, "texture1", 0);
+    //Texture tex1 = texture_load("src/wall.jpg", GL_TEXTURE0);
+    //Texture tex2 = texture_load("src/awesomeface.png", 1);
+    //shader_use(&shader);
+    
     glm::vec3 cubePositions[] = 
     { 
         glm::vec3( 0.0f, 0.0f, 0.0f), 
@@ -176,40 +185,55 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        shader_use(&shader);
+        lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
+        lightPos.z = sin(glfwGetTime() / 2.0f) * 2.0f;
 
+        shader_use(&lightingShader);
+        shader_set_vec3(&lightingShader, "lightPos", lightPos);
+        shader_set_vec3(&lightingShader, "viewPos", camera.Position);
+        shader_set_vec3(&lightingShader, "objectColor", 1.0f, 0.5f, 0.31f);
+        shader_set_vec3(&lightingShader, "lightColor",  1.0f, 1.0f, 1.0f);
         // matrices
-        glm::mat4 model = glm::mat4(1.0f); model = glm::rotate(model, (float)glfwGetTime() * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom),
-                                                (float)SCR_WIDTH / SCR_HEIGHT,
-                                                0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
         glm::mat4 view = camera_get_view_matrix(&camera);
-        shader_set_mat4(&shader, "projection", projection);
-        shader_set_mat4(&shader, "view", view);
-        shader_set_mat4(&shader, "model", model);
-
-        texture_bind(&tex1, 0);
-        texture_bind(&tex2, 1);
-        glUniform1i(glGetUniformLocation(shader.id, "texture1"), 0);
-        glUniform1i(glGetUniformLocation(shader.id, "texture2"), 1);
-        vao.bind();
-        for(unsigned int i = 0; i < 10; i++)
+        shader_set_mat4(&lightingShader, "projection", projection);
+        shader_set_mat4(&lightingShader, "view", view);
+        //shader_set_mat4(&lightingShader, "model", model);
+        glm::mat4 model = glm::mat4(1.0f);
+        shader_set_mat4(&lightingShader, "model", model);
+        vaoCube.bind();
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        //texture_bind(&tex1, 0);
+        //texture_bind(&tex2, 1);
+        //glUniform1i(glGetUniformLocation(shader.id, "texture1"), 0);
+        //glUniform1i(glGetUniformLocation(shader.id, "texture2"), 1);
+        shader_use(&lightCubeShader);
+        shader_set_mat4(&lightCubeShader, "projection", projection);
+        shader_set_mat4(&lightCubeShader, "view", view);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, lightPos);
+        model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
+        shader_set_mat4(&lightCubeShader, "model", model);
+        vaoLight.bind();
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        /*for(unsigned int i = 0; i < 10; i++)
         {
             glm::mat4 model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]); float angle = 20.0f * i;
             model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            shader_set_mat4(&shader, "model", model);
+            shader_set_mat4(&lightingShader, "model", model);
             glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        }*/
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    vao.destroy();
+    vaoCube.destroy();
+    vaoLight.destroy();
     vbo.destroy();
-    texture_destroy(&tex1);
+
+    //texture_destroy(&tex1);
 
     glfwTerminate();
     return 0;
