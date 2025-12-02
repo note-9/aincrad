@@ -185,14 +185,26 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        lightPos.x = 1.0f + sin(glfwGetTime()) * 2.0f;
-        lightPos.z = sin(glfwGetTime() / 2.0f) * 2.0f;
-
         shader_use(&lightingShader);
-        shader_set_vec3(&lightingShader, "lightPos", lightPos);
+        shader_set_vec3(&lightingShader, "light.position", lightPos);
         shader_set_vec3(&lightingShader, "viewPos", camera.Position);
-        shader_set_vec3(&lightingShader, "objectColor", 1.0f, 0.5f, 0.31f);
-        shader_set_vec3(&lightingShader, "lightColor",  1.0f, 1.0f, 1.0f);
+        // light properties
+        glm::vec3 lightColor;
+        lightColor.x = static_cast<float>(sin(glfwGetTime() * 2.0));
+        lightColor.y = static_cast<float>(sin(glfwGetTime() * 0.7));
+        lightColor.z = static_cast<float>(sin(glfwGetTime() * 1.3));
+        glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // decrease the influence
+        glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); // low influence
+        shader_set_vec3(&lightingShader, "light.ambient", ambientColor);
+        shader_set_vec3(&lightingShader, "light.diffuse", diffuseColor);
+        shader_set_vec3(&lightingShader, "light.specular", 1.0f, 1.0f, 1.0f);
+
+        // material properties
+        shader_set_vec3(&lightingShader, "material.ambient", 1.0f, 0.5f, 0.31f);
+        shader_set_vec3(&lightingShader, "material.diffuse", 1.0f, 0.5f, 0.31f);
+        shader_set_vec3(&lightingShader, "material.specular", 0.5f, 0.5f, 0.5f); // specular lighting doesn't have full effect on this object's material
+        shader_set_float(&lightingShader, "material.shininess", 32.0f);
+        
         // matrices
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
@@ -209,6 +221,11 @@ int main()
         //glUniform1i(glGetUniformLocation(shader.id, "texture1"), 0);
         //glUniform1i(glGetUniformLocation(shader.id, "texture2"), 1);
         shader_use(&lightCubeShader);
+        
+        shader_set_vec3(&lightCubeShader, "light.ambient", ambientColor);
+        shader_set_vec3(&lightCubeShader, "light.diffuse", diffuseColor);
+        shader_set_vec3(&lightCubeShader, "light.specular", 1.0f, 1.0f, 1.0f);
+        
         shader_set_mat4(&lightCubeShader, "projection", projection);
         shader_set_mat4(&lightCubeShader, "view", view);
         model = glm::mat4(1.0f);
