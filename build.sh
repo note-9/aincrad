@@ -8,7 +8,7 @@ SRC_DIR=src
 EXT_DIR=dep
 
 INCLUDES="-I${EXT_DIR}/glad/include -I${EXT_DIR}/glfw/include -I${EXT_DIR}/stb/ -I${EXT_DIR}/"
-LIBS="-lglfw -ldl -lGL -lm -lpthread -lX11 -lXrandr -lXi -lXxf86vm -lXcursor"
+LIBS="-lglfw -ldl -lassimp -lm -lpthread -lX11 -lXrandr -lXi -lXxf86vm -lXcursor -lGL"
 
 echo "Compiling GLAD (C)..."
 $CC -std=c11 \
