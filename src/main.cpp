@@ -24,23 +24,20 @@ const unsigned int SCR_HEIGHT = 800;
 const unsigned int NUM_PATCH_PTS = 4;
 int useWireframe = 0;
 int displayGrayscale = 0;
-// Camera state
+
 glm::vec3 cameraPos   = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp    = glm::vec3(0.0f, 1.0f, 0.0f);
 
-// Timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 
-// Mouse
 float yaw   = -90.0f;
 float pitch = 0.0f;
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
 
-// Zoom
 float fov = 45.0f;
 
 const char* TCS =R"(
@@ -67,7 +64,6 @@ void main(){
     vec4 eyeSpacePos10 = view * model * gl_in[2].gl_Position;
     vec4 eyeSpacePos11 = view * model * gl_in[3].gl_Position;
 
-    // "distance" from camera scaled between 0 and 1
     float distance00 = clamp( (abs(eyeSpacePos00.z) - MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0 );
     float distance01 = clamp( (abs(eyeSpacePos01.z) - MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0 );
     float distance10 = clamp( (abs(eyeSpacePos10.z) - MIN_DISTANCE) / (MAX_DISTANCE-MIN_DISTANCE), 0.0, 1.0 );
@@ -88,6 +84,7 @@ void main(){
   }
 }
 )";
+
 const char* TES = R"(
 #version 450 core
 layout(quads, fractional_odd_spacing, ccw) in;
@@ -138,6 +135,7 @@ void main()
     gl_Position = projection * view * worldPos;
 }
 )";
+
 const char* VS1 = R"(
 #version 450 core
 layout (location = 0) in vec3 aPos;
@@ -163,27 +161,20 @@ uniform samplerCube skybox;
 
 void main()
 {
-    // Normalize height
     float h = clamp((Height + 16.0) / 32.0, 0.0, 1.0);
 
-    // Base terrain color
     vec3 terrainColor = vec3(h);
 
-    // --- Water mask ---
     float waterMask = smoothstep(0.15, 0.30, h);
 
-    // --- Refraction-style sampling ---
     vec3 N = normalize(WorldNormal);
 
-    // Base downward direction
     vec3 down = vec3(0.0, -1.0, 0.0);
 
-    // Small distortion using normal (fake refraction)
     vec3 refractDir = normalize(down + N * 0.15);
 
     vec3 waterColor = texture(skybox, refractDir).rgb;
 
-    // Final blend
     vec3 finalColor = mix(waterColor, terrainColor, waterMask);
 
     FragColor = vec4(finalColor, 1.0);
@@ -218,6 +209,7 @@ void main(){
   FragColor = texture(skybox, TexCoord);
 }
 )";
+
 void processInput(GLFWwindow* window)
 {
     float cameraSpeed = 10.0f * deltaTime;
@@ -234,6 +226,7 @@ void processInput(GLFWwindow* window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 }
+
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
     if (firstMouse) {
@@ -263,6 +256,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
     front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     cameraFront = glm::normalize(front);
 }
+
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     fov -= (float)yoffset;
@@ -274,6 +268,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
+
 unsigned int loadCubemap(std::vector<std::string> faces)
 {
     unsigned int textureID;
@@ -305,6 +300,7 @@ unsigned int loadCubemap(std::vector<std::string> faces)
 
     return textureID;
 } 
+
 int main(){
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR,4);
@@ -559,7 +555,6 @@ int main(){
 
     glUseProgram(shaderProgram2);
 
-// REMOVE translation from view
     glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
 
     glUniformMatrix4fv(
@@ -583,9 +578,10 @@ int main(){
     glfwSwapBuffers(w);
     glfwPollEvents();
   }
-  glDeleteVertexArrays(1, VAO);
-  glDeleteBuffers(1, VBO);
+  glDeleteVertexArrays(2, VAO);
+  glDeleteBuffers(2, VBO);
   glDeleteProgram(shaderProgram1);
+  glDeleteProgram(shaderProgram2);
 
   glfwTerminate();
   return 0;
